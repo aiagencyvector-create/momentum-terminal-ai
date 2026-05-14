@@ -1,0 +1,29 @@
+appId: ai.visus.momentumTerminal
+productName: Momentum Terminal AI
+copyright: Copyright (c) 2026 Visus AI
+directories:
+  buildResources: resources
+  output: release/${version}
+files:
+  - out/**/*
+  - package.json
+asarUnpack:
+  - resources/**
+  - node_modules/node-pty/**
+  - node_modules/better-sqlite3/**
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: ${productName}-${version}-${arch}-setup.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+publish:
+  provider: github
+  releaseType: draft

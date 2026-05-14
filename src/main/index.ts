@@ -1,5 +1,8 @@
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { join } from 'node:path';
+import { registerTerminalIpc } from './ipc/terminal';
+import { registerFsIpc } from './ipc/fs';
+import { killAllPtysForWebContents } from './services/pty-manager';
 
 const isDev = !app.isPackaged;
 
@@ -17,7 +20,7 @@ function createMainWindow(): BrowserWindow {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      sandbox: false,
       webviewTag: true,
       spellcheck: false,
     },
@@ -26,6 +29,10 @@ function createMainWindow(): BrowserWindow {
   win.on('ready-to-show', () => {
     win.show();
     if (isDev) win.webContents.openDevTools({ mode: 'detach' });
+  });
+
+  win.webContents.on('destroyed', () => {
+    killAllPtysForWebContents(win.webContents.id);
   });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -45,6 +52,9 @@ function createMainWindow(): BrowserWindow {
 app.whenReady().then(() => {
   ipcMain.handle('app:version', () => app.getVersion());
   ipcMain.handle('app:platform', () => process.platform);
+
+  registerTerminalIpc();
+  registerFsIpc();
 
   createMainWindow();
 

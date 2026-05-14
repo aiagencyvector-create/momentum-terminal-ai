@@ -16,6 +16,7 @@
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "format": "prettier --write .",
     "package:win": "electron-vite build && electron-builder --win --x64",
+    "package:dir": "electron-vite build && electron-builder --dir --win --x64",
     "postinstall": "electron-builder install-app-deps"
   },
   "pnpm": {
@@ -26,6 +27,7 @@
     ]
   },
   "dependencies": {
+    "@lydell/node-pty": "1.2.0-beta.12",
     "@supabase/supabase-js": "^2.45.4",
     "better-sqlite3": "^11.3.0",
     "chokidar": "^4.0.1",
@@ -40,6 +42,9 @@
     "@typescript-eslint/eslint-plugin": "^8.8.1",
     "@typescript-eslint/parser": "^8.8.1",
     "@vitejs/plugin-react": "^4.3.2",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/addon-web-links": "^0.11.0",
+    "@xterm/xterm": "^5.5.0",
     "autoprefixer": "^10.4.20",
     "electron": "^33.0.0",
     "electron-builder": "^25.0.5",
@@ -56,9 +61,6 @@
     "tailwindcss": "^3.4.13",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
-    "@xterm/xterm": "^5.5.0",
-    "@xterm/addon-fit": "^0.10.0",
-    "@xterm/addon-web-links": "^0.11.0",
     "zustand": "^5.0.0"
   }
 }

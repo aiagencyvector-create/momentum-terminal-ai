@@ -8,6 +8,9 @@ import type {
   BrainSearchResult,
   IngestPayload,
 } from '../shared/brain-types';
+import type { StudioDesign, StudioDesignData } from '../shared/studio-types';
+import type { PackageScript, TestRunUpdate } from '../shared/testlab-types';
+import type { CapturedError } from '../shared/debug-types';
 
 type Unsubscribe = () => void;
 
@@ -90,6 +93,41 @@ const api = {
       toId: string;
       relation?: string;
     }): Promise<BrainEdge> => ipcRenderer.invoke('brain:addEdge', payload),
+  },
+  studio: {
+    list: (userId: string): Promise<StudioDesign[]> =>
+      ipcRenderer.invoke('studio:list', { userId }),
+    save: (payload: {
+      userId: string;
+      name: string;
+      data: StudioDesignData;
+    }): Promise<StudioDesign> => ipcRenderer.invoke('studio:save', payload),
+    delete: (userId: string, id: string): Promise<void> =>
+      ipcRenderer.invoke('studio:delete', { userId, id }),
+  },
+  testlab: {
+    listScripts: (workspacePath: string): Promise<PackageScript[]> =>
+      ipcRenderer.invoke('testlab:listScripts', workspacePath),
+    run: (payload: { workspacePath: string; script: string }): Promise<{ runId: string }> =>
+      ipcRenderer.invoke('testlab:run', payload),
+    cancel: (runId: string): Promise<void> => ipcRenderer.invoke('testlab:cancel', runId),
+    onUpdate: (handler: (update: TestRunUpdate) => void): Unsubscribe => {
+      const listener = (_e: IpcRendererEvent, update: TestRunUpdate) => handler(update);
+      ipcRenderer.on('testlab:update', listener);
+      return () => ipcRenderer.off('testlab:update', listener);
+    },
+  },
+  debug: {
+    list: (): Promise<CapturedError[]> => ipcRenderer.invoke('debug:list'),
+    clear: (): Promise<void> => ipcRenderer.invoke('debug:clear'),
+    dismiss: (id: string): Promise<void> => ipcRenderer.invoke('debug:dismiss', id),
+    explain: (stack: string): Promise<string> =>
+      ipcRenderer.invoke('debug:explain', { stack }),
+    onError: (handler: (err: CapturedError) => void): Unsubscribe => {
+      const listener = (_e: IpcRendererEvent, err: CapturedError) => handler(err);
+      ipcRenderer.on('debug:error', listener);
+      return () => ipcRenderer.off('debug:error', listener);
+    },
   },
 } as const;
 

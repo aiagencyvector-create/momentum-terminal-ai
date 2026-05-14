@@ -5,8 +5,13 @@ import { registerFsIpc } from './ipc/fs';
 import { registerPortsIpc } from './ipc/ports';
 import { registerSettingsIpc } from './ipc/settings';
 import { registerBrainIpc } from './ipc/brain';
+import { registerStudioIpc } from './ipc/studio';
+import { registerTestLabIpc } from './ipc/testlab';
+import { registerDebugIpc } from './ipc/debug';
 import { killAllPtysForWebContents } from './services/pty-manager';
 import { clearPorts } from './services/port-detector';
+import { clearErrors } from './services/error-detector';
+import { killAllTestRunsForWebContents } from './ipc/testlab';
 
 const isDev = !app.isPackaged;
 
@@ -37,7 +42,9 @@ function createMainWindow(): BrowserWindow {
 
   win.webContents.on('destroyed', () => {
     killAllPtysForWebContents(win.webContents.id);
+    killAllTestRunsForWebContents(win.webContents.id);
     clearPorts(win.webContents.id);
+    clearErrors(win.webContents.id);
   });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -63,6 +70,9 @@ app.whenReady().then(() => {
   registerPortsIpc();
   registerSettingsIpc();
   registerBrainIpc();
+  registerStudioIpc();
+  registerTestLabIpc();
+  registerDebugIpc();
 
   createMainWindow();
 

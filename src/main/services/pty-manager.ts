@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { WebContents } from 'electron';
 import type { PtyOptions, PtySpawnResult } from '../../shared/types';
 import { feedTerminalChunk, cleanupTerminal } from './port-detector';
+import { feedErrorChunk, cleanupErrorTerminal } from './error-detector';
 
 type Session = {
   id: string;
@@ -45,6 +46,7 @@ export function spawnPty(webContents: WebContents, opts: PtyOptions = {}): PtySp
     if (webContents.isDestroyed()) return;
     webContents.send('terminal:data', { id, data });
     feedTerminalChunk(webContents, id, data);
+    feedErrorChunk(webContents, id, data);
   });
 
   pty.onExit(({ exitCode, signal }) => {
@@ -52,6 +54,7 @@ export function spawnPty(webContents: WebContents, opts: PtyOptions = {}): PtySp
       webContents.send('terminal:exit', { id, exitCode, signal: signal ?? null });
     }
     cleanupTerminal(id);
+    cleanupErrorTerminal(id);
     sessions.delete(id);
   });
 
@@ -73,6 +76,7 @@ export function killPty(id: string): void {
   if (s) {
     s.pty.kill();
     cleanupTerminal(id);
+    cleanupErrorTerminal(id);
     sessions.delete(id);
   }
 }
@@ -86,6 +90,7 @@ export function killAllPtysForWebContents(webContentsId: number): void {
         // ignore
       }
       cleanupTerminal(id);
+      cleanupErrorTerminal(id);
       sessions.delete(id);
     }
   }

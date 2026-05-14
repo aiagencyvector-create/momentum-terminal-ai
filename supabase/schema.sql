@@ -110,6 +110,40 @@ as $$
 $$;
 
 -- ============================================================================
+-- Project Studio: tabela de designs
+-- ============================================================================
+
+create table if not exists public.studio_designs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null default 'Untitled',
+  data jsonb not null default '{"nodes":[],"edges":[]}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, name)
+);
+
+create index if not exists studio_designs_user_idx on public.studio_designs(user_id);
+
+alter table public.studio_designs enable row level security;
+
+drop policy if exists "users select own designs" on public.studio_designs;
+create policy "users select own designs" on public.studio_designs
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "users insert own designs" on public.studio_designs;
+create policy "users insert own designs" on public.studio_designs
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "users update own designs" on public.studio_designs;
+create policy "users update own designs" on public.studio_designs
+  for update using (auth.uid() = user_id);
+
+drop policy if exists "users delete own designs" on public.studio_designs;
+create policy "users delete own designs" on public.studio_designs
+  for delete using (auth.uid() = user_id);
+
+-- ============================================================================
 -- Trigger para atualizar updated_at
 -- ============================================================================
 
@@ -124,4 +158,9 @@ $$;
 drop trigger if exists trg_brain_documents_updated_at on public.brain_documents;
 create trigger trg_brain_documents_updated_at
   before update on public.brain_documents
+  for each row execute function public.set_updated_at();
+
+drop trigger if exists trg_studio_designs_updated_at on public.studio_designs;
+create trigger trg_studio_designs_updated_at
+  before update on public.studio_designs
   for each row execute function public.set_updated_at();

@@ -26,6 +26,24 @@ pnpm build          # build de produção
 pnpm package:win    # gera instalador NSIS x64 em release/
 ```
 
+## Gerar instalador Windows (M6)
+
+O electron-builder usa um cache (`winCodeSign`) que contém symlinks para macOS dentro do archive. Windows não permite criar symlinks sem privilégio — você precisa **habilitar Developer Mode** (uma vez só, sem precisar de admin):
+
+1. Abra `ms-settings:developers` (Windows + R, cola e Enter)
+2. Liga **Developer Mode**
+3. Fecha tudo, abre PowerShell de novo
+4. Roda:
+
+```powershell
+cd C:\dev\momentum-terminal-ai
+pnpm package:win
+```
+
+Sai um instalador NSIS em `release\0.0.1\Momentum Terminal AI-0.0.1-x64-setup.exe`. Você dá dois cliques, ele instala em `Program Files`, cria atalho no Iniciar e na Área de Trabalho.
+
+Para um build sem instalador (só a pasta unpacked com o `.exe` dentro), use `pnpm package:dir` — sai em `release\0.0.1\win-unpacked\`.
+
 ## Estrutura
 
 ```

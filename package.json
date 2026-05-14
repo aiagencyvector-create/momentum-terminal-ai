@@ -18,6 +18,13 @@
     "package:win": "electron-vite build && electron-builder --win --x64",
     "postinstall": "electron-builder install-app-deps"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "better-sqlite3",
+      "esbuild"
+    ]
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
     "better-sqlite3": "^11.3.0",

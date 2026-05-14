@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type { DirEntry, OpenedFile, PtyOptions, PtySpawnResult } from '../shared/types';
+import type { DetectedPort } from '../shared/port-patterns';
 
 type Unsubscribe = () => void;
 
@@ -39,6 +40,17 @@ const api = {
       ) => handler(payload);
       ipcRenderer.on('terminal:exit', listener);
       return () => ipcRenderer.off('terminal:exit', listener);
+    },
+  },
+  ports: {
+    list: (): Promise<DetectedPort[]> => ipcRenderer.invoke('ports:list'),
+    clear: (): Promise<void> => ipcRenderer.invoke('ports:clear'),
+    dismiss: (url: string): Promise<void> => ipcRenderer.invoke('ports:dismiss', url),
+    openExternal: (url: string): Promise<void> => ipcRenderer.invoke('ports:openExternal', url),
+    onDetected: (handler: (port: DetectedPort) => void): Unsubscribe => {
+      const listener = (_e: IpcRendererEvent, port: DetectedPort) => handler(port);
+      ipcRenderer.on('ports:detected', listener);
+      return () => ipcRenderer.off('ports:detected', listener);
     },
   },
 } as const;

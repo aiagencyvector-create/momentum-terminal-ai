@@ -2,6 +2,7 @@ import { spawn, type IPty } from '@lydell/node-pty';
 import { randomUUID } from 'node:crypto';
 import type { WebContents } from 'electron';
 import type { PtyOptions, PtySpawnResult } from '../../shared/types';
+import { feedTerminalChunk, cleanupTerminal } from './port-detector';
 
 type Session = {
   id: string;
@@ -41,15 +42,16 @@ export function spawnPty(webContents: WebContents, opts: PtyOptions = {}): PtySp
   sessions.set(id, session);
 
   pty.onData((data) => {
-    if (!webContents.isDestroyed()) {
-      webContents.send('terminal:data', { id, data });
-    }
+    if (webContents.isDestroyed()) return;
+    webContents.send('terminal:data', { id, data });
+    feedTerminalChunk(webContents, id, data);
   });
 
   pty.onExit(({ exitCode, signal }) => {
     if (!webContents.isDestroyed()) {
       webContents.send('terminal:exit', { id, exitCode, signal: signal ?? null });
     }
+    cleanupTerminal(id);
     sessions.delete(id);
   });
 
@@ -70,6 +72,7 @@ export function killPty(id: string): void {
   const s = sessions.get(id);
   if (s) {
     s.pty.kill();
+    cleanupTerminal(id);
     sessions.delete(id);
   }
 }
@@ -82,6 +85,7 @@ export function killAllPtysForWebContents(webContentsId: number): void {
       } catch {
         // ignore
       }
+      cleanupTerminal(id);
       sessions.delete(id);
     }
   }

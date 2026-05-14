@@ -2,7 +2,9 @@ import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { join } from 'node:path';
 import { registerTerminalIpc } from './ipc/terminal';
 import { registerFsIpc } from './ipc/fs';
+import { registerPortsIpc } from './ipc/ports';
 import { killAllPtysForWebContents } from './services/pty-manager';
+import { clearPorts } from './services/port-detector';
 
 const isDev = !app.isPackaged;
 
@@ -33,6 +35,7 @@ function createMainWindow(): BrowserWindow {
 
   win.webContents.on('destroyed', () => {
     killAllPtysForWebContents(win.webContents.id);
+    clearPorts(win.webContents.id);
   });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -55,6 +58,7 @@ app.whenReady().then(() => {
 
   registerTerminalIpc();
   registerFsIpc();
+  registerPortsIpc();
 
   createMainWindow();
 

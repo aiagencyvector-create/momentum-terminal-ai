@@ -3,6 +3,8 @@ import { join } from 'node:path';
 import { registerTerminalIpc } from './ipc/terminal';
 import { registerFsIpc } from './ipc/fs';
 import { registerPortsIpc } from './ipc/ports';
+import { registerSettingsIpc } from './ipc/settings';
+import { registerBrainIpc } from './ipc/brain';
 import { killAllPtysForWebContents } from './services/pty-manager';
 import { clearPorts } from './services/port-detector';
 
@@ -59,6 +61,8 @@ app.whenReady().then(() => {
   registerTerminalIpc();
   registerFsIpc();
   registerPortsIpc();
+  registerSettingsIpc();
+  registerBrainIpc();
 
   createMainWindow();
 

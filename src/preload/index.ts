@@ -1,6 +1,13 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type { DirEntry, OpenedFile, PtyOptions, PtySpawnResult } from '../shared/types';
 import type { DetectedPort } from '../shared/port-patterns';
+import type {
+  AppSettings,
+  BrainDocument,
+  BrainEdge,
+  BrainSearchResult,
+  IngestPayload,
+} from '../shared/brain-types';
 
 type Unsubscribe = () => void;
 
@@ -52,6 +59,37 @@ const api = {
       ipcRenderer.on('ports:detected', listener);
       return () => ipcRenderer.off('ports:detected', listener);
     },
+  },
+  settings: {
+    get: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
+    setPublic: (payload: { url: string; anonKey: string }): Promise<void> =>
+      ipcRenderer.invoke('settings:setPublic', payload),
+    setSupabaseServiceKey: (key: string): Promise<void> =>
+      ipcRenderer.invoke('settings:setSupabaseServiceKey', key),
+    setOpenAiKey: (key: string): Promise<void> =>
+      ipcRenderer.invoke('settings:setOpenAiKey', key),
+  },
+  brain: {
+    ingest: (payload: IngestPayload & { userId: string }): Promise<BrainDocument> =>
+      ipcRenderer.invoke('brain:ingest', payload),
+    list: (userId: string): Promise<BrainDocument[]> =>
+      ipcRenderer.invoke('brain:list', { userId }),
+    delete: (userId: string, id: string): Promise<void> =>
+      ipcRenderer.invoke('brain:delete', { userId, id }),
+    search: (payload: {
+      userId: string;
+      query: string;
+      threshold?: number;
+      limit?: number;
+    }): Promise<BrainSearchResult[]> => ipcRenderer.invoke('brain:search', payload),
+    listEdges: (userId: string): Promise<BrainEdge[]> =>
+      ipcRenderer.invoke('brain:listEdges', { userId }),
+    addEdge: (payload: {
+      userId: string;
+      fromId: string;
+      toId: string;
+      relation?: string;
+    }): Promise<BrainEdge> => ipcRenderer.invoke('brain:addEdge', payload),
   },
 } as const;
 
